@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,12 +31,15 @@ public abstract class Character : MonoBehaviour, IDamageable
     [SerializeField]
     protected float staminaRegenDelay;
 
+    protected float staminareFreshRate = 1f;
     protected bool staminaRecentUse = false;
 
 
-
+    protected bool side;
 
     protected GameObject opponent;
+
+    protected bool notEnoughStamina;
 
 
     [field: SerializeField] public float maxHealth { get; set; }
@@ -44,16 +49,32 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     public float currentStamina { get { return stamina; } set { stamina = value; } }
 
-    
+    protected float attackHeight = 2.5f;
+
+    GameObject panel;
+    TextMeshProUGUI p;
 
 
-    void Start()
+
+
+    protected void Start()
     {
         hp = maxHealth;
         stamina = maxStamina;
         rb = character.GetComponent<Rigidbody>();
         currentHealth = maxHealth;
         currentStamina = maxStamina;
+        if (gameObject.GetComponent<Player>() != null)
+        {
+            panel.SetActive(false);
+        }
+
+    }
+
+    void Awake()
+    {
+        panel = GameObject.FindGameObjectWithTag("D_panel");
+        p = panel.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     public virtual void Damage(float damageDealt)
@@ -62,16 +83,33 @@ public abstract class Character : MonoBehaviour, IDamageable
   
       //  Debug.Log(currentHealth);
         if (currentHealth <= 0)
+
+            //die animation - corutine prob
             Die();
     }
 
 
+    protected void CheckOpponentPosition()
+    {
+
+    }
+
+
+
     public virtual void StaminaUse(float staminaSpent) 
     {
+        if (staminaSpent > currentStamina)
+        {
+            notEnoughStamina = true;
+        } else
+        {
+            notEnoughStamina = false;
+        }
         currentStamina -= staminaSpent;
         staminaRecentUse = true;
         if (currentStamina <= 0)
             Exhausted();
+
 
         StartCoroutine(Delay(staminaBeforeRegenDelay, true));
     }
@@ -88,8 +126,13 @@ public abstract class Character : MonoBehaviour, IDamageable
         {
             if (stamina < maxStamina && !staminaRecentUse)
             {
-                stamina++;
+                stamina += 1 * staminareFreshRate;
                 StartCoroutine(Delay(staminaRegenDelay, false));
+            }
+            else if (stamina >= maxStamina)
+            {
+                stamina = maxStamina;
+                staminareFreshRate = 1f;
             }
         }
     
@@ -98,14 +141,24 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     private void Exhausted()
     {
+        staminareFreshRate = 0.5f;
     }
 
     
 
     public virtual void Die() 
     {
+        if(panel != null)
+        {
+            panel.SetActive(true);
+        }
+        
+        p.text = gameObject.name + "Loses";
+        
         Destroy(gameObject);
         //GameEnd / respawn (nextRound)
+
+        Time.timeScale = 0;
     }
 
     protected virtual void HealStamina() 
@@ -115,7 +168,7 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     public void BasicAttack() 
     {
-        Vector3 pos = character.transform.position + new Vector3(xDifference * turnedSide, 0, 0);
+        Vector3 pos = character.transform.position + new Vector3(xDifference * turnedSide, attackHeight, 0);
         var attack = Instantiate(basicAttackPrefab, pos, Quaternion.identity);
         attack.transform.SetParent(character.transform);
 

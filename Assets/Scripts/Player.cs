@@ -8,157 +8,276 @@ using UnityEngine.InputSystem;
 using UnityEngine.Events;
 using OpenCover.Framework.Model;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
+using UnityEngine.UIElements;
 
 
 
 public class Player : Character
 {
 
-    private enum PlayerState { Idle, Walking, Jumping, Crouching, Attacking, Blocking, Hurt, Dead, Exhausted }
-    private PlayerState currentState = PlayerState.Idle;
+    protected enum PlayerState { Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Exhausted, Super }
+    protected PlayerState currentState = PlayerState.Idle;
+    protected PlayerState previousState;
+
 
     public float BasicAttackDamage { get; set; } = 20f;
 
 
-
-
+    //InputActionMap inputActionMap;
 
     [SerializeField]
-    private float walkSpeed;
+    Collider attackCollider;
+
     [SerializeField]
-    private float jumpForce;
+    protected float walkSpeed;
+    [SerializeField]
+    protected float jumpForce;
 
     protected bool canInput;
     protected bool isJumping;
     protected bool isAttacking;
     protected bool gettingHit;
+    protected bool doubleJump;
+
+    protected int walkingDirection;
+
+    Animator animator;
+    
+
+    new void Start()
+    {
+        base.Start();
+        animator = GetComponentInChildren<Animator>();
+    }
 
 
 
-
-
-
-  
     // Update is called once per frame
-
-
-
-    //public event Action CallDamage;
-
-    private void Awake() //pøed startem
-    {
-
-        //CallDamage += DoDamage;
-    }
-
-    private void DoDamage(GameObject obj)
-    {
-        //obj.Damage(50f);
-    }
-
     void Update()
     {
-
-
         CheckOpponentPosition();
 
 
-        //HandleStateTransitions();
-        //HandleStateActions();
-
-
-
-        Movement();
+        HandleStateTransitions();
+        HandleStateActions();
+        
+        
+        //Movement();
         //HealStamina();
     }
 
 
-    private void HandleStateActions()
+    protected void HandleStateActions()
     {
-        throw new NotImplementedException();
-    }
-
-    private void HandleStateTransitions()
-    {
+        // Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Exhausted, Super 
+        Debug.Log(currentState);
         switch (currentState)
         {
-            case PlayerState.Idle:  
+
+            case PlayerState.Idle:
+                animator.SetBool("IsJumping", false);
+                animator.SetBool("IsWalking", false);
+                animator.SetBool("IsAttacking", false);
+                animator.SetBool("IsCrouching", false);
+                Idle();
                 break;
+
             case PlayerState.Walking:
+                animator.SetBool("IsWalking", true);
+                Move();
                 break;
+
             case PlayerState.Jumping:
+                if (previousState == PlayerState.Walking)
+                {
+                    animator.SetBool("IsWalking", false);
+                }
+                animator.SetBool("IsJumping", true);
+                Jump();
                 break;
             case PlayerState.Crouching:
+                animator.SetBool("IsCrouching", true);
+                animator.SetBool("IsAttacking", false);
+                Crouch();
                 break;
+
             case PlayerState.Attacking:
+                if (previousState == PlayerState.Walking)
+                {
+                    animator.SetBool("IsWalking", true);
+                }
+                animator.SetBool("IsAttacking", true);
+                Attack();
                 break;
+
+            case PlayerState.JumpingAttack:
+                animator.SetBool("IsAttacking", true);
+                JumpAttack();
+                break;
+
+            case PlayerState.CrouchingAttack:
+                animator.SetBool("IsAttacking", true);
+                CrouchAttack();
+                break;
+
             case PlayerState.Blocking:
+                Block();
                 break;
+
             case PlayerState.Hurt:
+                Hurt();
                 break;
-            case PlayerState.Dead:
+
+            case PlayerState.Super:
+                Super();
                 break;
-            case PlayerState.Exhausted:
-                break;
-            default:
-                break;
+
         }
 
+    }
 
+    protected void Move()
+    {
+        Vector3 position = character.transform.position;
 
-        /*
+        if (Input.GetKey(KeyCode.D))
+        {
+            position.x += walkSpeed * Time.deltaTime;
+        }
+        else if (Input.GetKey(KeyCode.A))
+        {
+            position.x -= walkSpeed * Time.deltaTime;
+        }
+        character.transform.position = position;
+    }
+
+    protected void Idle()
+    {
+
+    }
+
+    protected void HandleStateTransitions()
+    {
+        // Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Exhausted, Super 
         switch (currentState)
         {
             case PlayerState.Idle:
-                if (movementInput.x != 0)
+                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.A))
                     TransitionToState(PlayerState.Walking);
-                if (isJumping)
+                if (Input.GetKey(KeyCode.S))
+                    TransitionToState(PlayerState.Crouching);
+                if (Input.GetKeyDown(KeyCode.W) && currentStamina >= 0 && !isJumping)
                     TransitionToState(PlayerState.Jumping);
-                if (isAttacking)
+                if (Input.GetKey(KeyCode.F))
+                    TransitionToState(PlayerState.Blocking);
+                if (Input.GetKeyDown(KeyCode.E))
                     TransitionToState(PlayerState.Attacking);
+                //if (Input.GetKeyDown(KeyCode.G))
+                //TransitionToState(PlayerState.Super);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
+
                 break;
 
             case PlayerState.Walking:
-                if (movementInput.x == 0)
+
+                if (!Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.A))
                     TransitionToState(PlayerState.Idle);
-                if (isJumping)
+                if (Input.GetKeyDown(KeyCode.W) && currentStamina >= 0 && !isJumping)
                     TransitionToState(PlayerState.Jumping);
-                if (isAttacking)
-                    TransitionToState(PlayerState.Attacking);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
                 break;
 
             case PlayerState.Jumping:
-                if (rb.velocity.y == 0) // Grounded check
+                if (!isJumping)
                     TransitionToState(PlayerState.Idle);
+                if (Input.GetKeyDown(KeyCode.E))
+                    TransitionToState(PlayerState.JumpingAttack);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
+                break;
+
+            case PlayerState.JumpingAttack:
+                if (!isJumping)
+                    TransitionToState(PlayerState.Idle);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
+                break;
+
+            case PlayerState.Crouching:
+                if (!Input.GetKey(KeyCode.S))
+                    TransitionToState(PlayerState.Idle);
+                if (Input.GetKeyDown(KeyCode.E))
+                    TransitionToState(PlayerState.CrouchingAttack);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
+                break;
+
+            case PlayerState.CrouchingAttack:
+                if (!Input.GetKeyDown(KeyCode.E))
+                    TransitionToState(PlayerState.Crouching);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
                 break;
 
             case PlayerState.Attacking:
-                // Transition back to Idle or Walking once the attack animation ends
-                if (!isAttacking)
-                    TransitionToState(movementInput.x == 0 ? PlayerState.Idle : PlayerState.Walking);
+                if (!Input.GetKeyDown(KeyCode.E))
+                    TransitionToState(PlayerState.Idle);
+                if (Input.GetKeyDown(KeyCode.F))
+                    TransitionToState(PlayerState.Blocking);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
                 break;
-        
+
+            case PlayerState.Blocking:
+                if (!Input.GetKey(KeyCode.F))
+                    TransitionToState(PlayerState.Idle);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                    TransitionToState(PlayerState.Attacking);
+                //
+                //TransitionToState(PlayerState.Hurt);
+                if (currentHealth <= 0)
+                    TransitionToState(PlayerState.Dead);
+                break;
+
+            case PlayerState.Hurt:
+                TransitionToState(PlayerState.Idle);
+                //Dodelat
+                break;
+            case PlayerState.Exhausted:
+                break;
+
+            case PlayerState.Super:
+                //TransitionToState(PlayerState.Idle);
+                break;
         }
-        */
-    }
 
-    private void CheckOpponentPosition()
-    {
 
     }
 
-    private void TransitionToState(PlayerState newState)
+    protected void TransitionToState(PlayerState newState)
     {
+        previousState = currentState;
         currentState = newState;
     }
 
-
-    private void ResetAttack()
-    {
-        isAttacking = false;
-    }
-
-    
 
     protected override void HealStamina()
     {
@@ -177,54 +296,68 @@ public class Player : Character
         }
     }
 
-    private void Movement()
+
+    protected void Super()
     {
-        Vector3 position = character.transform.position;
-
-
-
-        //if (!canInput) return;
-
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            BasicAttack();
-            //StartCoroutine(Delay(staminaBeforeRegenDelay, true));
-        }
-        else
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            SpecialAttack();
-        }
-        else
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-
-            if (position.y > 0.6) return;
-            if (stamina <= 0) return;
-            StaminaUse(20);
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-
-        }
-
-        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
-        {
-
-            if (Input.GetKey(KeyCode.RightArrow))
-            {
-                position.x += walkSpeed * Time.deltaTime;
-            }
-            else if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                position.x -= walkSpeed * Time.deltaTime;
-            }
-
-
-            character.transform.position = position;
-        }
-        return;
+        SpecialAttack();
     }
 
-    public void SpecialAttack()
+    protected void Hurt()
+    {
+    }
+
+    protected void Block()
+    {
+    }
+
+    protected void CrouchAttack()
+    {
+        Attack();
+    }
+
+    protected void JumpAttack()
+    {
+        Attack();
+    }
+
+    protected void Attack()
+    {
+        if (previousState == PlayerState.Jumping)
+        {
+            attackHeight = 0;
+        }
+        else
+        {
+            attackHeight = 2.5f;
+        }
+        BasicAttack();
+        Move(); //mozna zmenit potom
+    }
+
+    protected void Punch(Collider col)
+    {
+        
+        //var dmg = col.gameObject.GetComponentInParent<IDamageable>();
+
+    }
+
+    protected void Crouch()
+    {
+    }
+
+    protected void Jump()
+    {
+        Move(); //zmìnit až budou animace
+
+        if (isJumping) return;
+        StaminaUse(20);
+        if (notEnoughStamina) return;
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        isJumping = true;
+
+    }
+
+    protected void SpecialAttack()
     {
         float specialAttackDamage = BasicAttackDamage * 2;
 
@@ -235,171 +368,21 @@ public class Player : Character
         var collision = attack.GetComponent<BasicAttackCollision>();
         if (collision != null)
         {
-            // Pass the special attack damage value to the collision script.
             collision.doubleDmg = 2;
         }
 
         Destroy(attack.gameObject, attackDuration);
     }
+
+    protected void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isJumping = false;
+            doubleJump = true;
+        }
+    }
 }
 
 
 
-
-
-
-
-
-
-
-
-/*
-
-public class PlayerController : MonoBehaviour
-{
-
-    private enum PlayerState { Idle, Walking, Jumping, Crouching, Attacking, CrouchAttacking, Blocking, Hurt, Dead }
-    private PlayerState currentState = PlayerState.Idle;
-
-    private PlayerInputActions inputActions;
-    private Rigidbody2D rb;
-
-    // Movement properties
-    public float speed = 5f;
-    public float jumpForce = 10f;
-
-    private Vector2 movementInput;
-    private bool isJumping;
-    private bool isAttacking;
-
-    private void Awake()
-    {
-        inputActions = new PlayerInputActions();
-
-        // Register input actions
-        inputActions.Player.Move.performed += ctx => movementInput = ctx.ReadValue<Vector2>();
-        inputActions.Player.Move.canceled += ctx => movementInput = Vector2.zero;
-        
-        inputActions.Player.Jump.performed += ctx => Jump();
-        inputActions.Player.Attack.performed += ctx => Attack();
-
-        rb = GetComponent<Rigidbody2D>();
-    }
-
-    private void OnEnable()
-    {
-        inputActions.Player.Enable();
-    }
-
-    private void OnDisable()
-    {
-        inputActions.Player.Disable();
-    }
-
-    private void Update()
-    {
-        HandleStateTransitions();
-        HandleStateActions();
-    }
-
-
-    private void HandleStateTransitions()
-    {
-        switch (currentState)
-        {
-            case PlayerState.Idle:
-                if (movementInput.x != 0)
-                    TransitionToState(PlayerState.Walking);
-                if (isJumping)
-                    TransitionToState(PlayerState.Jumping);
-                if (isAttacking)
-                    TransitionToState(PlayerState.Attacking);
-                break;
-
-            case PlayerState.Walking:
-                if (movementInput.x == 0)
-                    TransitionToState(PlayerState.Idle);
-                if (isJumping)
-                    TransitionToState(PlayerState.Jumping);
-                if (isAttacking)
-                    TransitionToState(PlayerState.Attacking);
-                break;
-
-            case PlayerState.Jumping:
-                if (rb.velocity.y == 0) // Grounded check
-                    TransitionToState(PlayerState.Idle);
-                break;
-
-            case PlayerState.Attacking:
-                // Transition back to Idle or Walking once the attack animation ends
-                if (!isAttacking)
-                    TransitionToState(movementInput.x == 0 ? PlayerState.Idle : PlayerState.Walking);
-                break;
-
-            // Add other state transitions as needed (Hurt, Dead, etc.)
-        }
-    }
-
-    // Perform actions based on the current state
-    private void HandleStateActions()
-    {
-        switch (currentState)
-        {
-            case PlayerState.Walking:
-                Move();
-                break;
-            case PlayerState.Jumping:
-                Jump();
-                break;
-            case PlayerState.Attacking:
-                Attack();
-                break;
-            case PlayerState.Idle:
-                // Idle state logic (e.g., play idle animation)
-                break;
-            // Add other actions here
-        }
-    }
-
-    // Transition to a new state
-    private void TransitionToState(PlayerState newState)
-    {
-        currentState = newState;
-        // Handle any setup required for new state, e.g., playing animations
-    }
-
-    // Movement logic
-    private void Move()
-    {
-        Vector2 movement = new Vector2(movementInput.x * speed, rb.velocity.y);
-        rb.velocity = movement;
-    }
-
-    // Jump logic
-    private void Jump()
-    {
-        if (currentState != PlayerState.Jumping)
-        {
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-            isJumping = true;
-        }
-    }
-
-    // Attack logic
-    private void Attack()
-    {
-        if (currentState != PlayerState.Attacking)
-        {
-            isAttacking = true;
-            // Play attack animation, handle attack damage, etc.
-            Invoke(nameof(ResetAttack), 0.5f); // Example attack duration
-        }
-    }
-
-    private void ResetAttack()
-    {
-        isAttacking = false;
-    }
-}
-
-*/

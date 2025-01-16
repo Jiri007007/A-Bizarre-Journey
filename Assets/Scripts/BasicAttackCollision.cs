@@ -20,10 +20,10 @@ public class BasicAttackCollision : MonoBehaviour
 
         GameObject thisGameObj = gameObject;
         var player = thisGameObj.GetComponentInParent<Player>();
-        if (player != null)
+        /*if (player != null)
         {
-            //Debug.Log(player);
-        }
+            Debug.Log(player);
+        }*/
         float damageAmount = player != null ? player.BasicAttackDamage * doubleDmg : 20f; 
 
         if (doubleDmg != 1) 

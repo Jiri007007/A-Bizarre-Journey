@@ -25,8 +25,7 @@ public class Healthbar : MonoBehaviour
 
     // Start is called before the first frame update
     void Start()
-    {
-        
+    {        
         characterScript = character.GetComponent<Character>();
         if (characterScript != null)
         {
