@@ -56,7 +56,7 @@ public class Player : Character
     // Update is called once per frame
     void Update()
     {
-        CheckOpponentPosition();
+        //CheckOpponentPosition();
 
 
         HandleStateTransitions();
@@ -299,7 +299,7 @@ public class Player : Character
 
     protected void Super()
     {
-        SpecialAttack();
+        //SpecialAttack();
     }
 
     protected void Hurt()
@@ -322,7 +322,7 @@ public class Player : Character
 
     protected void Attack()
     {
-        if (previousState == PlayerState.Jumping)
+        if (previousState == PlayerState.Jumping || previousState == PlayerState.Crouching)
         {
             attackHeight = 0;
         }
@@ -356,7 +356,7 @@ public class Player : Character
         isJumping = true;
 
     }
-
+    /*
     protected void SpecialAttack()
     {
         float specialAttackDamage = BasicAttackDamage * 2;
@@ -373,6 +373,7 @@ public class Player : Character
 
         Destroy(attack.gameObject, attackDuration);
     }
+    */
 
     protected void OnCollisionEnter(Collision collision)
     {

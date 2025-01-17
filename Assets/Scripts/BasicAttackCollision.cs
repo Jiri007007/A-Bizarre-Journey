@@ -11,10 +11,8 @@ public class BasicAttackCollision : MonoBehaviour
     void OnTriggerEnter(Collider col)
     {
 
-        if (col.tag == "Ground") 
-        {
-            return;
-        }
+        if (col.tag == "Ground") return;
+        
      
         var dmg = col.gameObject.GetComponentInParent<IDamageable>();
 

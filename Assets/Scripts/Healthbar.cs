@@ -46,8 +46,6 @@ public class Healthbar : MonoBehaviour
     {
         health = characterScript.currentHealth;
         stamina = characterScript.currentStamina;
-        //Debug.Log(health);
-        //Debug.Log(healthBar.value);
 
         if (healthBar.value != health) 
         {
