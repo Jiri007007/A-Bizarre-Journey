@@ -34,6 +34,7 @@ public class BasicAttackCollision : MonoBehaviour
         }
         if (dmg != null)
         {
+
             dmg.Damage(damageAmount);
         }
         doubleDmg = 0;

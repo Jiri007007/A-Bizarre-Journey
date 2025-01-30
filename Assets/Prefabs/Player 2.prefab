@@ -318,9 +318,9 @@ GameObject:
   - component: {fileID: 8836131623464372601}
   - component: {fileID: 8836131623464372600}
   - component: {fileID: -353710246695428186}
-  - component: {fileID: 8836131623464372603}
+  - component: {fileID: 6663488782204184121}
   m_Layer: 0
-  m_Name: PlayerCube
+  m_Name: Player 2
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -389,7 +389,7 @@ MonoBehaviour:
   m_DefaultActionMap: Players
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &8836131623464372603
+--- !u!114 &6663488782204184121
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -398,7 +398,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8836131623464372606}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10afd15df5d43c6429bcc49b21196864, type: 3}
+  m_Script: {fileID: 11500000, guid: 6d4c4b3364b443446b7bef4ac151bbf6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   character: {fileID: 8836131623464372606}
@@ -408,9 +408,11 @@ MonoBehaviour:
   staminaRegenDelay: 0.1
   <maxHealth>k__BackingField: 100
   <maxStamina>k__BackingField: 100
-  attackCollider: {fileID: 8243738094099609082}
+  attackCollider: {fileID: 0}
   walkSpeed: 5
   jumpForce: 10
+  longRangeAttack: {fileID: -5420939861040168233, guid: 22f2935560e24aa45b7e536b5caf3702, type: 3}
+  projectileSpeed: 10
 --- !u!1 &8836131623631612983
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,8 +15,9 @@ public class Dummy : Character
         base.Start();
         animator = GetComponentInChildren<Animator>();
     }
-    void Update()
+    new void Update()
     {
+        base.Update();
         time += Time.deltaTime;
         if (time >= attackInterval) 
         {

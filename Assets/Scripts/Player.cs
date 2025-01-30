@@ -6,7 +6,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Events;
-using OpenCover.Framework.Model;
+
 using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine.UIElements;
@@ -54,15 +54,15 @@ public class Player : Character
 
 
     // Update is called once per frame
-    void Update()
+    new void Update()
     {
+        base.Update();
         //CheckOpponentPosition();
-
 
         HandleStateTransitions();
         HandleStateActions();
-        
-        
+
+        Debug.Log(currentState);
         //Movement();
         //HealStamina();
     }
@@ -71,7 +71,7 @@ public class Player : Character
     protected void HandleStateActions()
     {
         // Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Exhausted, Super 
-        Debug.Log(currentState);
+        //Debug.Log(currentState);
         switch (currentState)
         {
 
@@ -122,6 +122,7 @@ public class Player : Character
                 break;
 
             case PlayerState.Blocking:
+                Debug.Log("HUH");
                 Block();
                 break;
 
@@ -130,6 +131,7 @@ public class Player : Character
                 break;
 
             case PlayerState.Super:
+                animator.SetBool("IsAttacking", true);
                 Super();
                 break;
 
@@ -173,6 +175,8 @@ public class Player : Character
                     TransitionToState(PlayerState.Blocking);
                 if (Input.GetKeyDown(KeyCode.E))
                     TransitionToState(PlayerState.Attacking);
+                if (Input.GetKeyDown(KeyCode.Q))
+                    TransitionToState(PlayerState.Super);
                 //if (Input.GetKeyDown(KeyCode.G))
                 //TransitionToState(PlayerState.Super);
                 //
@@ -247,8 +251,10 @@ public class Player : Character
 
             case PlayerState.Blocking:
                 if (!Input.GetKey(KeyCode.F))
+                {
+                    isBlocking = false;
                     TransitionToState(PlayerState.Idle);
-
+                }
                 if (Input.GetKeyDown(KeyCode.E))
                     TransitionToState(PlayerState.Attacking);
                 //
@@ -265,7 +271,7 @@ public class Player : Character
                 break;
 
             case PlayerState.Super:
-                //TransitionToState(PlayerState.Idle);
+                TransitionToState(PlayerState.Idle);
                 break;
         }
 
@@ -299,7 +305,7 @@ public class Player : Character
 
     protected void Super()
     {
-        //SpecialAttack();
+        SpecialAttack();
     }
 
     protected void Hurt()
@@ -308,6 +314,7 @@ public class Player : Character
 
     protected void Block()
     {
+        isBlocking = true;
     }
 
     protected void CrouchAttack()
@@ -356,8 +363,8 @@ public class Player : Character
         isJumping = true;
 
     }
-    /*
-    protected void SpecialAttack()
+    
+    protected virtual void SpecialAttack()
     {
         float specialAttackDamage = BasicAttackDamage * 2;
 
@@ -373,7 +380,7 @@ public class Player : Character
 
         Destroy(attack.gameObject, attackDuration);
     }
-    */
+    
 
     protected void OnCollisionEnter(Collision collision)
     {

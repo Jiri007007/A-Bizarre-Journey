@@ -20,7 +20,7 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     protected float xDifference = 1.1f;
     [SerializeField]
-    protected float turnedSide = 1;
+    protected float turnedSide;
 
     protected float hp;
     protected float attackDuration = 0.5f;
@@ -35,11 +35,21 @@ public abstract class Character : MonoBehaviour, IDamageable
     protected bool staminaRecentUse = false;
 
 
-    protected bool side;
+    public Character opponent
+    {
+        get => opp; set => opp = value;
+    }
+    protected Character opp;
 
-    protected GameObject opponent;
+    public bool isBlocking
+    {
+        get => block; set => block = value;
+    }
+    protected bool block = false;
 
     protected bool notEnoughStamina;
+
+    
 
 
     [field: SerializeField] public float maxHealth { get; set; }
@@ -78,7 +88,12 @@ public abstract class Character : MonoBehaviour, IDamageable
     }
 
     public virtual void Damage(float damageDealt)
-    { 
+    {
+        if (this is Player player && player.isBlocking)
+        {
+            damageDealt = 0;
+        }
+
         currentHealth -= damageDealt;
   
       //  Debug.Log(currentHealth);
@@ -91,7 +106,26 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     protected void CheckOpponentPosition()
     {
-
+        if (opponent == null || gameObject == null) return;
+        if (gameObject.transform.position.x <= opponent.transform.position.x)
+        {
+            gameObject.transform.eulerAngles = new Vector3(
+                gameObject.transform.eulerAngles.x,
+                90,
+                gameObject.transform.eulerAngles.z
+                );
+            turnedSide = 1;
+        }
+        else
+        {
+            gameObject.transform.eulerAngles = new Vector3(
+                gameObject.transform.eulerAngles.x,
+                270,
+                gameObject.transform.eulerAngles.z
+                );
+            turnedSide = -1;
+        }
+        
     }
 
 
@@ -137,6 +171,11 @@ public abstract class Character : MonoBehaviour, IDamageable
         }
     
 
+    }
+
+    protected void Update()
+    {
+        CheckOpponentPosition();
     }
 
     private void Exhausted()
