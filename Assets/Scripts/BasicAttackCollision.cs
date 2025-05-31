@@ -8,9 +8,9 @@ public class BasicAttackCollision : MonoBehaviour
 
     public float doubleDmg = 0;
 
+
     void OnTriggerEnter(Collider col)
     {
-
         if (col.tag == "Ground") return;
         
      
@@ -20,7 +20,8 @@ public class BasicAttackCollision : MonoBehaviour
         var player = thisGameObj.GetComponentInParent<Player>();
         /*if (player != null)
         {
-            Debug.Log(player);
+            
+        .Log(player);
         }*/
         float damageAmount = player != null ? player.BasicAttackDamage * doubleDmg : 20f; 
 
@@ -34,7 +35,6 @@ public class BasicAttackCollision : MonoBehaviour
         }
         if (dmg != null)
         {
-
             dmg.Damage(damageAmount);
         }
         doubleDmg = 0;

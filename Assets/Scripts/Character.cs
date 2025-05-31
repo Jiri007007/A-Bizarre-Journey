@@ -6,16 +6,26 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
+//[RequireComponent(typeof(CharacterController))]
 public abstract class Character : MonoBehaviour, IDamageable
 {
-
     [SerializeField]
     protected GameObject character;
 
+    [SerializeField]
+    protected Sprite sprite;
+    public Sprite image => sprite;
+
     protected Rigidbody rb;
+    protected Animator animator;
 
     [SerializeField]
     protected BoxCollider basicAttackPrefab;
+
+
+    [SerializeField]
+    protected string characterName;
+    public string chName => characterName;
 
 
     protected float xDifference = 1.1f;
@@ -49,7 +59,6 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     protected bool notEnoughStamina;
 
-    
 
 
     [field: SerializeField] public float maxHealth { get; set; }
@@ -65,6 +74,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     TextMeshProUGUI p;
 
 
+    public event Action<Character> PlayerDeath;
 
 
     protected void Start()
@@ -74,6 +84,7 @@ public abstract class Character : MonoBehaviour, IDamageable
         rb = character.GetComponent<Rigidbody>();
         currentHealth = maxHealth;
         currentStamina = maxStamina;
+
         if (gameObject.GetComponent<Player>() != null)
         {
             panel.SetActive(false);
@@ -81,7 +92,7 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     }
 
-    void Awake()
+    protected void Awake()
     {
         panel = GameObject.FindGameObjectWithTag("D_panel");
         p = panel.GetComponentInChildren<TextMeshProUGUI>();
@@ -96,7 +107,6 @@ public abstract class Character : MonoBehaviour, IDamageable
 
         currentHealth -= damageDealt;
   
-      //  Debug.Log(currentHealth);
         if (currentHealth <= 0)
 
             //die animation - corutine prob
@@ -187,17 +197,7 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     public virtual void Die() 
     {
-        if(panel != null)
-        {
-            panel.SetActive(true);
-        }
-        
-        p.text = gameObject.name + "Loses";
-        
-        Destroy(gameObject);
-        //GameEnd / respawn (nextRound)
-
-        Time.timeScale = 0;
+        PlayerDeath.Invoke(this);
     }
 
     protected virtual void HealStamina() 

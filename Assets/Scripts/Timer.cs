@@ -8,13 +8,19 @@ public class Timer : MonoBehaviour
 {
     // Start is called before the first frame update
     [SerializeField]
-    float gameTime;
-    float currentGameTime;
+    float gameTime = 120;
+    public float gTime => gameTime;
+    public float currentGameTime { get; set; }
 
     [SerializeField]
     TextMeshProUGUI timeOutput;
     float timeRound;
 
+    public bool gamePaused { get; set; } = false;
+
+    public bool gameStarted { get; set; } = false;
+
+    public event Action TimeOut;
 
     void Start()
     {
@@ -24,19 +30,20 @@ public class Timer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (gamePaused || !gameStarted)
+        {
+            Time.timeScale = 0;
+            return;
+        }
+        if (Time.timeScale != 1)
+            Time.timeScale = 1;
 
         currentGameTime -= Time.deltaTime;
         timeRound = currentGameTime;
         timeOutput.text = (Math.Round(timeRound,0)).ToString();
         if (currentGameTime <= 0)
         {
-
-            var panel = GameObject.FindGameObjectWithTag("D_panel");
-            var p = panel.GetComponentInChildren<TextMeshProUGUI>();
-            panel.SetActive(true);
-            p.text = "Time's up";
-
-            Time.timeScale = 0;
+            TimeOut.Invoke();
         }
     }
 }

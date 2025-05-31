@@ -8,8 +8,27 @@ public class Player2 : Player
     protected BoxCollider longRangeAttack;
     [SerializeField]
     protected float projectileSpeed = 10f;
+
+    private float nextActionTime = 0f;
+    private float interval = 5f;
+
+
+    bool canSuper = true;
+
+     private new void Update()
+    {
+        base.Update();
+        if (Time.time >= nextActionTime && !canSuper)
+        {
+            nextActionTime = Time.time + interval;
+            canSuper = true;
+        }
+
+
+    }
     protected override void SpecialAttack()
     {
+        if (!canSuper) return;
 
         Vector3 pos = character.transform.position + new Vector3(xDifference * turnedSide, attackHeight, 0);
         var attack = Instantiate(longRangeAttack, pos, Quaternion.identity);
@@ -22,5 +41,6 @@ public class Player2 : Player
         }
 
         Destroy(attack.gameObject, attackDuration);
+        canSuper = false;
     }
 }

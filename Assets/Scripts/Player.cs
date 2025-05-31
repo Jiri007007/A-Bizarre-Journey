@@ -10,7 +10,7 @@ using UnityEngine.Events;
 using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine.UIElements;
-
+using UnityEngine.InputSystem.XR;
 
 
 public class Player : Character
@@ -36,14 +36,26 @@ public class Player : Character
 
     protected bool canInput;
     protected bool isJumping;
+    protected bool isSuper1;
     protected bool isAttacking;
     protected bool gettingHit;
     protected bool doubleJump;
+    protected bool canJump = true;
 
     protected int walkingDirection;
+    protected int pointDirection;
 
-    Animator animator;
-    
+    protected Vector2 movementInput = Vector2.zero;
+
+
+
+    protected bool canAttack = true;
+    protected bool canSuper = true;
+    [SerializeField]
+    protected float attackCooldown = 0.25f;
+    [SerializeField]
+    protected float superCooldown = 0.25f;
+
 
     new void Start()
     {
@@ -51,22 +63,43 @@ public class Player : Character
         animator = GetComponentInChildren<Animator>();
     }
 
+    new void Awake() 
+    {
+        base.Awake();
+ 
+    }
+
 
 
     // Update is called once per frame
-    new void Update()
+    protected new void Update()
     {
         base.Update();
         //CheckOpponentPosition();
-
+        PointDirection();
         HandleStateTransitions();
         HandleStateActions();
 
-        Debug.Log(currentState);
+        //Debug.Log(currentState);
         //Movement();
         //HealStamina();
     }
 
+    private void PointDirection()
+    {
+        if (movementInput.y > 0) 
+        {
+            pointDirection = 1;
+        }
+        else if (movementInput.y < 0)
+        {
+            pointDirection = -1;
+        }
+        else
+        {
+            pointDirection = 0;
+        }
+    }
 
     protected void HandleStateActions()
     {
@@ -143,11 +176,11 @@ public class Player : Character
     {
         Vector3 position = character.transform.position;
 
-        if (Input.GetKey(KeyCode.D))
+        if (movementInput.x > 0)
         {
             position.x += walkSpeed * Time.deltaTime;
         }
-        else if (Input.GetKey(KeyCode.A))
+        else if (movementInput.x < 0)
         {
             position.x -= walkSpeed * Time.deltaTime;
         }
@@ -162,20 +195,27 @@ public class Player : Character
     protected void HandleStateTransitions()
     {
         // Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Exhausted, Super 
+
+
+
+
+
+
+
         switch (currentState)
         {
             case PlayerState.Idle:
-                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.A))
+                if (movementInput.x > 0 || movementInput.x < 0)
                     TransitionToState(PlayerState.Walking);
-                if (Input.GetKey(KeyCode.S))
+                if (movementInput.y < 0)
                     TransitionToState(PlayerState.Crouching);
-                if (Input.GetKeyDown(KeyCode.W) && currentStamina >= 0 && !isJumping)
+                if (isJumping && currentStamina >= 0)
                     TransitionToState(PlayerState.Jumping);
-                if (Input.GetKey(KeyCode.F))
+                if (isBlocking)
                     TransitionToState(PlayerState.Blocking);
-                if (Input.GetKeyDown(KeyCode.E))
+                if (isAttacking)
                     TransitionToState(PlayerState.Attacking);
-                if (Input.GetKeyDown(KeyCode.Q))
+                if (isSuper1)
                     TransitionToState(PlayerState.Super);
                 //if (Input.GetKeyDown(KeyCode.G))
                 //TransitionToState(PlayerState.Super);
@@ -188,9 +228,9 @@ public class Player : Character
 
             case PlayerState.Walking:
 
-                if (!Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.A))
+                if (!(movementInput.x > 0 || movementInput.x < 0))
                     TransitionToState(PlayerState.Idle);
-                if (Input.GetKeyDown(KeyCode.W) && currentStamina >= 0 && !isJumping)
+                if (isJumping && currentStamina >= 0)
                     TransitionToState(PlayerState.Jumping);
                 //
                 //TransitionToState(PlayerState.Hurt);
@@ -199,9 +239,9 @@ public class Player : Character
                 break;
 
             case PlayerState.Jumping:
-                if (!isJumping)
+                if (canJump && !isJumping)
                     TransitionToState(PlayerState.Idle);
-                if (Input.GetKeyDown(KeyCode.E))
+                if (isAttacking)
                     TransitionToState(PlayerState.JumpingAttack);
                 //
                 //TransitionToState(PlayerState.Hurt);
@@ -210,7 +250,7 @@ public class Player : Character
                 break;
 
             case PlayerState.JumpingAttack:
-                if (!isJumping)
+                if (!isJumping && canJump)
                     TransitionToState(PlayerState.Idle);
                 //
                 //TransitionToState(PlayerState.Hurt);
@@ -219,9 +259,9 @@ public class Player : Character
                 break;
 
             case PlayerState.Crouching:
-                if (!Input.GetKey(KeyCode.S))
+                if (!(movementInput.y < 0))
                     TransitionToState(PlayerState.Idle);
-                if (Input.GetKeyDown(KeyCode.E))
+                if (isAttacking)
                     TransitionToState(PlayerState.CrouchingAttack);
                 //
                 //TransitionToState(PlayerState.Hurt);
@@ -230,7 +270,7 @@ public class Player : Character
                 break;
 
             case PlayerState.CrouchingAttack:
-                if (!Input.GetKeyDown(KeyCode.E))
+                if (!isAttacking)
                     TransitionToState(PlayerState.Crouching);
                 //
                 //TransitionToState(PlayerState.Hurt);
@@ -239,9 +279,9 @@ public class Player : Character
                 break;
 
             case PlayerState.Attacking:
-                if (!Input.GetKeyDown(KeyCode.E))
+                if (!isAttacking)
                     TransitionToState(PlayerState.Idle);
-                if (Input.GetKeyDown(KeyCode.F))
+                if (isBlocking)
                     TransitionToState(PlayerState.Blocking);
                 //
                 //TransitionToState(PlayerState.Hurt);
@@ -250,12 +290,11 @@ public class Player : Character
                 break;
 
             case PlayerState.Blocking:
-                if (!Input.GetKey(KeyCode.F))
+                if (!isBlocking)
                 {
-                    isBlocking = false;
                     TransitionToState(PlayerState.Idle);
                 }
-                if (Input.GetKeyDown(KeyCode.E))
+                if (isAttacking)
                     TransitionToState(PlayerState.Attacking);
                 //
                 //TransitionToState(PlayerState.Hurt);
@@ -319,13 +358,18 @@ public class Player : Character
 
     protected void CrouchAttack()
     {
+        if (isAttacking)
         Attack();
     }
 
     protected void JumpAttack()
     {
+        if (isAttacking)
         Attack();
+
     }
+    string jumpString;
+    //public void OnJump(InputAction.CallbackContext ctx) => jumpString = ctx.ReadValue<string>();
 
     protected void Attack()
     {
@@ -338,6 +382,7 @@ public class Player : Character
             attackHeight = 2.5f;
         }
         BasicAttack();
+        isAttacking = false;
         Move(); //mozna zmenit potom
     }
 
@@ -356,11 +401,11 @@ public class Player : Character
     {
         Move(); //zmìnit až budou animace
 
-        if (isJumping) return;
+        if (!canJump) return;
         StaminaUse(20);
         if (notEnoughStamina) return;
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-        isJumping = true;
+        canJump = false;
 
     }
     
@@ -386,10 +431,59 @@ public class Player : Character
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
-            isJumping = false;
+            canJump = true;
             doubleJump = true;
         }
     }
+
+
+    protected IEnumerator AttackCooldown()
+    {
+        canAttack = false;
+        yield return new WaitForSeconds(attackCooldown);
+        isAttacking = false;
+        canAttack = true;
+    }
+
+    public void OnMove(InputAction.CallbackContext ctx)
+    {
+        movementInput = ctx.ReadValue<Vector2>();
+    }
+    public void OnJump(InputAction.CallbackContext ctx)
+    {
+        
+        isJumping = ctx.action.triggered;        
+    }
+    public void OnAttack(InputAction.CallbackContext ctx)
+    {
+        if (canAttack && ctx.action.triggered)
+        {
+            isAttacking = true;
+            StartCoroutine(AttackCooldown());
+        }
+    }
+
+    public void OnBlock(InputAction.CallbackContext ctx)
+    {
+        isBlocking = ctx.action.triggered;
+    }
+    public void OnSuper1(InputAction.CallbackContext ctx)
+    {
+        if (canSuper && ctx.action.triggered)
+        {
+            SpecialAttack();
+            StartCoroutine(AttackCooldown());
+        }
+    }
+
+    protected IEnumerator SuperCooldown()
+    {
+        canSuper = false;
+        yield return new WaitForSeconds(attackCooldown);
+        isSuper1 = false;
+        canSuper = true;
+    }
+
 }
 
 

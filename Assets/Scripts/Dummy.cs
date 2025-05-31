@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem.XR;
 
 public class Dummy : Character
 {
     [SerializeField]
     float attackInterval;
     float time;
-    Animator animator;
+
 
     // Update is called once per frame
     new void Start()
