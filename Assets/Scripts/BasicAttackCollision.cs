@@ -27,11 +27,11 @@ public class BasicAttackCollision : MonoBehaviour
 
         if (doubleDmg != 1) 
         {
-            Debug.Log("Double");
+            //Debug.Log("Double");
         }
         else
         {
-            Debug.Log("Normal");
+            //Debug.Log("Normal");
         }
         if (dmg != null)
         {

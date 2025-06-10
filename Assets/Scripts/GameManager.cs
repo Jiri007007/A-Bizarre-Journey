@@ -65,9 +65,8 @@ public class GameManager : MonoBehaviour
     {
         SetupStage();
         SetStage();
-        StartRound();
+        StartCoroutine(DelayStart(false));
         timer.enabled = true;
-        noPressing = false;
     }
     private void Awake()
     {
@@ -138,8 +137,8 @@ public class GameManager : MonoBehaviour
         var player2 = PlayerInput.Instantiate(characterRight.gameObject, controlScheme: p2InputName, pairWithDevice: GetInputDeviceType(p2InputName, p2DeviceIndex));
 
 
-        player1.transform.position = new Vector3(-4, 1, 0);
-        player2.transform.position = new Vector3(4, 1, 0);
+        player1.transform.position = new Vector3(-4, 0.1f, 0);
+        player2.transform.position = new Vector3(4, 0.1f, 0);
 
         chL = player1.GetComponent<Character>();
         chR = player2.GetComponent<Character>();
@@ -156,7 +155,6 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("UGHHHH... chL, nebo chR nejsou");
         }
-        deathPanel.SetActive(false);
     }
 
     private void CorrectKeyboardName(string inputName)
@@ -209,7 +207,7 @@ public class GameManager : MonoBehaviour
             playerNumber = "Player 1";
             chLWinScore++;
         }
-        p.text = ch.chName + " (" + playerNumber + ") " +"\\ W I N S";
+        p.text = ch.chName + "\n("+ playerNumber +")" +"\n W I N S";
         ResetTimer();
         EndRound(ch);
         //GameEnd / respawn (nextRound)
@@ -227,7 +225,7 @@ public class GameManager : MonoBehaviour
             //WIN;
             Debug.Log("win");
             Debug.Log(chLWinScore + " " + chRWinScore + "" + pointsToWin);
-            SceneManager.LoadScene("BattleScene");
+            SceneManager.LoadScene("CharacterSelectorScreen");
 
         }
         else if (drawCount >= maxDrawCount)
@@ -249,27 +247,41 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("akaelhasadjhsfkdyhaskjafkhajk");
-            StartCoroutine(DelayEnd()); //START ROUND;
+            //Debug.Log("akaelhasadjhsfkdyhaskjafkhajk");
+            StartCoroutine(DelayStart(true)); //START ROUND;
         }
     }
 
-    private IEnumerator DelayEnd()
+    private IEnumerator DelayStart(bool wait)
     {
+        deathPanel.SetActive(true);
+        if (wait)
         yield return new WaitForSecondsRealtime(1f);
         NextRoundText();
         yield return new WaitForSecondsRealtime(1.25f);
+        NextRoundStartText();
+        yield return new WaitForSecondsRealtime(0.2f);
+        if (wait)
         SetStage();
         StartRound();
+        deathPanel.SetActive(false);
     }
 
-  
+
+
+
 
     private void NextRoundText()
     {
         var p = deathPanel.GetComponentInChildren<TextMeshProUGUI>();
-        var roundNum = drawCount + chLWinScore + chRWinScore;
+        var roundNum = drawCount + chLWinScore + chRWinScore + 1;
         p.text = "Round: " + roundNum;
+    }
+
+    private void NextRoundStartText()
+    {
+        var p = deathPanel.GetComponentInChildren<TextMeshProUGUI>();
+        p.text = "FIGHT";
     }
 
 
@@ -280,18 +292,20 @@ public class GameManager : MonoBehaviour
         timer.currentGameTime = 0;
         noPressing = true;
     }
-    private void TimeOut()
+    public void TimeOut()
     {
         var p = deathPanel.GetComponentInChildren<TextMeshProUGUI>();
         deathPanel.SetActive(true);
-        p.text = "Time's up! \\ D R A W";
+        p.text = "Time's up!" + "\nD R A W";
         drawCount++;
         ResetTimer();
         EndRound(null);
     }
 
     void StartRound()
-    {   noPressing = false;
+    {
+        noPressing = false;
+        chL.canInput = chR.canInput = !noPressing;
         Time.timeScale = 1;
         timer.gameStarted = true;
         timer.currentGameTime = timer.gTime;

@@ -35,6 +35,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     protected float hp;
     protected float attackDuration = 0.5f;
     protected float stamina;
+    protected float stanceHp;
 
     [SerializeField]
     protected float staminaBeforeRegenDelay;
@@ -44,6 +45,7 @@ public abstract class Character : MonoBehaviour, IDamageable
     protected float staminareFreshRate = 1f;
     protected bool staminaRecentUse = false;
 
+    public bool canInput { get; set; } = false;
 
     public Character opponent
     {
@@ -64,38 +66,39 @@ public abstract class Character : MonoBehaviour, IDamageable
     [field: SerializeField] public float maxHealth { get; set; }
 
     [field: SerializeField] public float maxStamina { get; set; }
+
+    [field: SerializeField] public float maxStanceHp { get; set; } = 100f;
+
     public float currentHealth { get { return hp; } set {hp = value;} }
 
     public float currentStamina { get { return stamina; } set { stamina = value; } }
 
+    public float currentStanceHp { get { return stanceHp; } set { stanceHp = value; } }
+
+
     protected float attackHeight = 2.5f;
-
-    GameObject panel;
-    TextMeshProUGUI p;
-
 
     public event Action<Character> PlayerDeath;
 
 
-    protected void Start()
+    protected virtual void Start()
     {
-        hp = maxHealth;
+        hp = 10 * maxHealth;
         stamina = maxStamina;
-        rb = character.GetComponent<Rigidbody>();
+        stanceHp = maxStanceHp;
+
+       
+            rb = character.GetComponent<Rigidbody>();
+            if (rb == null)
+            {
+                rb = character.AddComponent<Rigidbody>();
+            }
         currentHealth = maxHealth;
         currentStamina = maxStamina;
-
-        if (gameObject.GetComponent<Player>() != null)
-        {
-            panel.SetActive(false);
-        }
-
     }
 
-    protected void Awake()
+    protected virtual void Awake()
     {
-        panel = GameObject.FindGameObjectWithTag("D_panel");
-        p = panel.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     public virtual void Damage(float damageDealt)
@@ -183,7 +186,7 @@ public abstract class Character : MonoBehaviour, IDamageable
 
     }
 
-    protected void Update()
+    protected virtual void Update()
     {
         CheckOpponentPosition();
     }

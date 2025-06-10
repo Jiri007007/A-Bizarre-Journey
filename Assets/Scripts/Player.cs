@@ -16,12 +16,12 @@ using UnityEngine.InputSystem.XR;
 public class Player : Character
 {
 
-    protected enum PlayerState { Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Exhausted, Super }
+    protected enum PlayerState { Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Falling, Super }
     protected PlayerState currentState = PlayerState.Idle;
     protected PlayerState previousState;
 
 
-    public float BasicAttackDamage { get; set; } = 20f;
+    public float BasicAttackDamage { get; set; } = 10f;
 
 
     //InputActionMap inputActionMap;
@@ -34,7 +34,6 @@ public class Player : Character
     [SerializeField]
     protected float jumpForce;
 
-    protected bool canInput;
     protected bool isJumping;
     protected bool isSuper1;
     protected bool isAttacking;
@@ -47,7 +46,8 @@ public class Player : Character
 
     protected Vector2 movementInput = Vector2.zero;
 
-
+    protected Coroutine hurtCoroutine;
+    protected Coroutine stanceRecoverCoroutine;
 
     protected bool canAttack = true;
     protected bool canSuper = true;
@@ -55,18 +55,34 @@ public class Player : Character
     protected float attackCooldown = 0.25f;
     [SerializeField]
     protected float superCooldown = 0.25f;
+    protected bool falling = false;
 
+
+    protected float lastHitTime = 0;
+    [SerializeField] protected float stanceResetDelay = 1f;
+
+    protected enum HurtType { None, Stun, Knockdown }
+    protected HurtType currentHurtType = HurtType.None;
 
     new void Start()
     {
         base.Start();
         animator = GetComponentInChildren<Animator>();
+        if (rb is null)
+        {
+            Debug.Log(rb + "HELP");
+
+        }
+        else
+        {
+            Debug.Log(rb + "HELPasldkfhakjdhflakjhdflakjhdlfasdh");
+        }
     }
 
-    new void Awake() 
+    new void Awake()
     {
         base.Awake();
- 
+
     }
 
 
@@ -79,15 +95,26 @@ public class Player : Character
         PointDirection();
         HandleStateTransitions();
         HandleStateActions();
-
+        RecoverStanceHp();
+        //Debug.Log("asdfasdùlfkjasùdlkfjùalskdjfùlaskjdfùlakjdfùlasjdùl" + canInput);
         //Debug.Log(currentState);
         //Movement();
         //HealStamina();
     }
 
-    private void PointDirection()
+    protected void RecoverStanceHp()
     {
-        if (movementInput.y > 0) 
+        bool isRecovering = currentState == PlayerState.Hurt || currentState == PlayerState.Falling;
+
+        if (Time.time - lastHitTime > stanceResetDelay && stanceHp < maxStanceHp && !isRecovering && !gettingHit)
+        {
+            stanceHp = maxStanceHp;
+            Debug.Log("HEALED");
+        }
+    }
+    protected void PointDirection()
+    {
+        if (movementInput.y > 0)
         {
             pointDirection = 1;
         }
@@ -99,6 +126,20 @@ public class Player : Character
         {
             pointDirection = 0;
         }
+    }
+
+    protected void ResetAllActions()
+    {
+        isAttacking = false;
+        isJumping = false;
+        isSuper1 = false;
+        isBlocking = false;
+        movementInput = Vector2.zero;
+
+        animator.SetBool("IsJumping", false);
+        animator.SetBool("IsWalking", false);
+        animator.SetBool("IsAttacking", false);
+        animator.SetBool("IsCrouching", false);
     }
 
     protected void HandleStateActions()
@@ -167,8 +208,16 @@ public class Player : Character
                 animator.SetBool("IsAttacking", true);
                 Super();
                 break;
+            case PlayerState.Falling:
+                Falling();
+                break;
 
         }
+
+    }
+
+    protected void Falling()
+    {
 
     }
 
@@ -195,13 +244,6 @@ public class Player : Character
     protected void HandleStateTransitions()
     {
         // Idle, Walking, Jumping, JumpingAttack, Crouching, CrouchingAttack, Attacking, Blocking, Hurt, Dead, Exhausted, Super 
-
-
-
-
-
-
-
         switch (currentState)
         {
             case PlayerState.Idle:
@@ -219,8 +261,6 @@ public class Player : Character
                     TransitionToState(PlayerState.Super);
                 //if (Input.GetKeyDown(KeyCode.G))
                 //TransitionToState(PlayerState.Super);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
 
@@ -232,8 +272,6 @@ public class Player : Character
                     TransitionToState(PlayerState.Idle);
                 if (isJumping && currentStamina >= 0)
                     TransitionToState(PlayerState.Jumping);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
                 break;
@@ -243,8 +281,6 @@ public class Player : Character
                     TransitionToState(PlayerState.Idle);
                 if (isAttacking)
                     TransitionToState(PlayerState.JumpingAttack);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
                 break;
@@ -252,8 +288,6 @@ public class Player : Character
             case PlayerState.JumpingAttack:
                 if (!isJumping && canJump)
                     TransitionToState(PlayerState.Idle);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
                 break;
@@ -263,8 +297,6 @@ public class Player : Character
                     TransitionToState(PlayerState.Idle);
                 if (isAttacking)
                     TransitionToState(PlayerState.CrouchingAttack);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
                 break;
@@ -272,8 +304,6 @@ public class Player : Character
             case PlayerState.CrouchingAttack:
                 if (!isAttacking)
                     TransitionToState(PlayerState.Crouching);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
                 break;
@@ -283,8 +313,6 @@ public class Player : Character
                     TransitionToState(PlayerState.Idle);
                 if (isBlocking)
                     TransitionToState(PlayerState.Blocking);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
                 break;
@@ -296,17 +324,20 @@ public class Player : Character
                 }
                 if (isAttacking)
                     TransitionToState(PlayerState.Attacking);
-                //
-                //TransitionToState(PlayerState.Hurt);
                 if (currentHealth <= 0)
                     TransitionToState(PlayerState.Dead);
                 break;
-
             case PlayerState.Hurt:
-                TransitionToState(PlayerState.Idle);
-                //Dodelat
+                if (!gettingHit && currentHurtType == HurtType.None)
+                    TransitionToState(PlayerState.Idle);
                 break;
-            case PlayerState.Exhausted:
+
+            case PlayerState.Falling:
+                if (!falling)
+                {
+                    currentHurtType = HurtType.None;
+                    TransitionToState(PlayerState.Idle);
+                }
                 break;
 
             case PlayerState.Super:
@@ -346,10 +377,23 @@ public class Player : Character
     {
         SpecialAttack();
     }
-
     protected void Hurt()
     {
+        switch (currentHurtType)
+        {
+            case HurtType.Stun:
+                //animator.SetTrigger("HitStun");
+                break;
+
+            case HurtType.Knockdown:
+                //animator.SetTrigger("Knockdown");
+                rb.useGravity = true;
+                rb.velocity = new Vector3(-turnedSide * 1.5f, 0.5f, 0);
+                break;
+        }
     }
+
+
 
     protected void Block()
     {
@@ -359,13 +403,13 @@ public class Player : Character
     protected void CrouchAttack()
     {
         if (isAttacking)
-        Attack();
+            Attack();
     }
 
     protected void JumpAttack()
     {
         if (isAttacking)
-        Attack();
+            Attack();
 
     }
     string jumpString;
@@ -388,7 +432,7 @@ public class Player : Character
 
     protected void Punch(Collider col)
     {
-        
+
         //var dmg = col.gameObject.GetComponentInParent<IDamageable>();
 
     }
@@ -399,7 +443,7 @@ public class Player : Character
 
     protected void Jump()
     {
-        Move(); //zmìnit až budou animace
+        Move(); //zmìnit až budou hu
 
         if (!canJump) return;
         StaminaUse(20);
@@ -408,7 +452,7 @@ public class Player : Character
         canJump = false;
 
     }
-    
+
     protected virtual void SpecialAttack()
     {
         float specialAttackDamage = BasicAttackDamage * 2;
@@ -425,7 +469,7 @@ public class Player : Character
 
         Destroy(attack.gameObject, attackDuration);
     }
-    
+
 
     protected void OnCollisionEnter(Collision collision)
     {
@@ -433,6 +477,18 @@ public class Player : Character
         {
             canJump = true;
             doubleJump = true;
+            if (currentState == PlayerState.Falling)
+            {
+                rb.velocity = Vector3.zero;
+                rb.useGravity = false;
+            }
+
+            if (currentHurtType == HurtType.Knockdown)
+            {
+                if (stanceRecoverCoroutine != null)
+                    StopCoroutine(stanceRecoverCoroutine);
+                stanceRecoverCoroutine = StartCoroutine(RecoverFromKnock());
+            }
         }
     }
 
@@ -447,15 +503,17 @@ public class Player : Character
 
     public void OnMove(InputAction.CallbackContext ctx)
     {
+        if (!canInput) return;
         movementInput = ctx.ReadValue<Vector2>();
     }
     public void OnJump(InputAction.CallbackContext ctx)
     {
-        
-        isJumping = ctx.action.triggered;        
+        if (!canInput) return;
+        isJumping = ctx.action.triggered;
     }
     public void OnAttack(InputAction.CallbackContext ctx)
     {
+        if (!canInput) return;
         if (canAttack && ctx.action.triggered)
         {
             isAttacking = true;
@@ -465,10 +523,12 @@ public class Player : Character
 
     public void OnBlock(InputAction.CallbackContext ctx)
     {
+        if (!canInput) return;
         isBlocking = ctx.action.triggered;
     }
     public void OnSuper1(InputAction.CallbackContext ctx)
     {
+        if (!canInput) return;
         if (canSuper && ctx.action.triggered)
         {
             SpecialAttack();
@@ -484,7 +544,77 @@ public class Player : Character
         canSuper = true;
     }
 
+
+    public override void Damage(float damageDealt)
+    {
+        base.Damage(damageDealt);
+        stanceHp -= 2 * damageDealt;
+        lastHitTime = Time.time;
+        Debug.Log(stanceHp + " stance");
+
+        if (stanceHp <= 0)
+        {
+            ResetAllActions();
+            gettingHit = true;
+            canInput = false;
+            currentHurtType = HurtType.Knockdown;
+
+            if (isJumping)
+            {
+                falling = true;
+                rb.useGravity = true;
+                TransitionToState(PlayerState.Falling);
+            }
+            else
+            {
+                if (hurtCoroutine != null) StopCoroutine(hurtCoroutine);
+                if (stanceRecoverCoroutine != null) StopCoroutine(stanceRecoverCoroutine);
+                hurtCoroutine = StartCoroutine(CheckIfHurt());
+                stanceRecoverCoroutine = StartCoroutine(RecoverFromKnock());
+                TransitionToState(PlayerState.Hurt);
+            }
+            return;
+        }
+        if (this is Player player && !player.isBlocking)
+        {
+            ResetAllActions();
+            gettingHit = true;
+            canInput = false;
+            currentHurtType = HurtType.Stun;
+
+            if (isJumping)
+            {
+                falling = true;
+                rb.useGravity = true;
+                TransitionToState(PlayerState.Falling);
+            }
+            else
+            {
+                if (hurtCoroutine != null) StopCoroutine(hurtCoroutine);
+                hurtCoroutine = StartCoroutine(CheckIfHurt());
+                TransitionToState(PlayerState.Hurt);
+            }
+        }
+    }
+
+    protected IEnumerator CheckIfHurt()
+    {
+        yield return new WaitForSecondsRealtime(1f);
+        hurtCoroutine = null;
+        canInput = true;
+        gettingHit = false;
+        currentHurtType = HurtType.None;
+    }
+    protected IEnumerator RecoverFromKnock()
+    {
+        Debug.Log("Starting RecoverFromKnock");
+        yield return new WaitForSeconds(10f);
+        Debug.Log("Finished waiting, resetting state");
+        currentHurtType = HurtType.None;
+        gettingHit = false;
+        canInput = true;
+        TransitionToState(PlayerState.Idle);
+    }
+
+
 }
-
-
-

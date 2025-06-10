@@ -13,9 +13,7 @@ public class Player2 : Player
     private float interval = 5f;
 
 
-    bool canSuper = true;
-
-     private new void Update()
+    private new void Update()
     {
         base.Update();
         if (Time.time >= nextActionTime && !canSuper)

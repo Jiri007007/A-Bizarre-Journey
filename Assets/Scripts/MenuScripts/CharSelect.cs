@@ -61,7 +61,7 @@ public class CharSelect : MonoBehaviour
     int charactersInRow;
 
 
-    float joystickCooldown = 0.2f;
+    float joystickCooldown = 0.5f;
     float joystickTimeDelay = 0;
 
     public event Action GoToMenu;
