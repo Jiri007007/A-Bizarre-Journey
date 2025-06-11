@@ -254,7 +254,7 @@ public class CharSelect : MonoBehaviour
                             playerIndex -= charactersInRow;
                         if (keyboard.downArrowKey.wasPressedThisFrame)
                             playerIndex += charactersInRow;
-                        if (keyboard.numpad0Key.wasPressedThisFrame)
+                        if (keyboard.pageUpKey.wasPressedThisFrame)
                             selected = true;
                     }
                 }

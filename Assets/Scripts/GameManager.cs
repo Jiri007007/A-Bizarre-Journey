@@ -146,15 +146,9 @@ public class GameManager : MonoBehaviour
         chL.PlayerDeath += HandlePlayerDeath;
         chR.PlayerDeath += HandlePlayerDeath;
 
-        if (chL != null && chR != null)
-        {
             chL.opponent = chR;
             chR.opponent = chL;
-        }
-        else
-        {
-            Debug.Log("UGHHHH... chL, nebo chR nejsou");
-        }
+
     }
 
     private void CorrectKeyboardName(string inputName)

@@ -2666,10 +2666,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   middle: {fileID: 1860345202}
   allCharacters:
-  - {fileID: 6663488782204184121, guid: 9fe1c702af699264e84e0e96eb596012, type: 3}
+  - {fileID: 346010658889392195, guid: 7bee39282118e614e8404985222195e9, type: 3}
   - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
   - {fileID: 706956285035461794, guid: 8b2bf79ccc7c5af49a68676f41a4eadc, type: 3}
-  - {fileID: 3090066068833523070, guid: 8d938b69eb417a94481415c16fe6f32d, type: 3}
+  - {fileID: 8457573010593162611, guid: 43a1934114a941742aad1728fccb4104, type: 3}
   maxDrawCount: 3
   pointsToWin: 3
   PauseButton: {fileID: 526482356}

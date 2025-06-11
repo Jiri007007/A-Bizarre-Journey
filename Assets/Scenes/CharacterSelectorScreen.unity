@@ -580,15 +580,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characters:
-  - {fileID: 6663488782204184121, guid: 9fe1c702af699264e84e0e96eb596012, type: 3}
-  - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
-  - {fileID: 3090066068833523070, guid: 8d938b69eb417a94481415c16fe6f32d, type: 3}
-  - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
-  - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
-  - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
+  - {fileID: 346010658889392195, guid: 7bee39282118e614e8404985222195e9, type: 3}
+  - {fileID: 8457573010593162611, guid: 43a1934114a941742aad1728fccb4104, type: 3}
+  - {fileID: 8457573010593162611, guid: 43a1934114a941742aad1728fccb4104, type: 3}
+  - {fileID: 346010658889392195, guid: 7bee39282118e614e8404985222195e9, type: 3}
   - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
   - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
-  - {fileID: 3090066068833523070, guid: 8d938b69eb417a94481415c16fe6f32d, type: 3}
+  - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
+  - {fileID: 8836131623464372603, guid: 7b7cc09aafa36dc4ea464314108df45c, type: 3}
   characterBoxPrefab: {fileID: 7496606814780883053, guid: b77bdde55a382ab479d614c3f50667b2, type: 3}
   characterBox: {fileID: 2143182174}
   text1: {fileID: 1394099329}
@@ -2017,9 +2016,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Player2
-
-'
+  m_text: "P2 - click here \nto change inputs"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2046,8 +2043,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 12
+  m_fontSizeBase: 12
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2531,9 +2528,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Player1
-
-'
+  m_text: "P1 - click here \nto change inputs"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2560,8 +2555,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 12
+  m_fontSizeBase: 12
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

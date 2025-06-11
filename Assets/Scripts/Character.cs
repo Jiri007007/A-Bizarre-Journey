@@ -86,10 +86,14 @@ public abstract class Character : MonoBehaviour, IDamageable
         hp = 10 * maxHealth;
         stamina = maxStamina;
         stanceHp = maxStanceHp;
+        animator = GetComponentInChildren<Animator>();
+        if (animator == null)
+        {
+            Debug.LogError("Animator not found on player or children!");
+        }
 
-       
-            rb = character.GetComponent<Rigidbody>();
-            if (rb == null)
+        rb = character.GetComponent<Rigidbody>();
+        if (rb == null)
             {
                 rb = character.AddComponent<Rigidbody>();
             }
